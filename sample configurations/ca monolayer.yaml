@@ -1,0 +1,38 @@
+BatchVideoAnalyzer:
+  __init__:
+    acq_mode: null
+    file_ext: tif
+    folder_path: J:/.shortcut-targets-by-id/0Bz-k3GVdqSBHSUZDVFhiMzFBSXc/E/Columbia/GVN
+      Lab/BeatProfiler/tutorial notebooks/sample videos
+    frame_rate: 20.0
+    vid_type: fluorescent
+  analyze_and_export:
+    export_list:
+    - summary
+    - peak_summary
+    - traces
+    - plot_trace
+    - plot_mask
+    - labeled_video
+    - beat_segments
+    export_path: J:\.shortcut-targets-by-id\0Bz-k3GVdqSBHSUZDVFhiMzFBSXc\E\Columbia\GVN
+      Lab\BeatProfiler\tutorial notebooks\sample videos\exportcamonolayer
+    skip_first_n: 0
+    split_units: seconds
+Trace:
+  __init__:
+    max_bpm: 360
+  analyze_peaks:
+    min_prominence: 0.2
+  calculate_drift:
+    method: exp
+    min_prominence: 0.1
+Video:
+  __init__:
+    low_ram: false
+    max_bpm: 360
+  calculate_mask:
+    invert: false
+    method: max fft
+    yolo_seg_model: No file selected
+  calculate_trace: {}

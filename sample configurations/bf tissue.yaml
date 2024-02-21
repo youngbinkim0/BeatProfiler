@@ -1,0 +1,45 @@
+BatchVideoAnalyzer:
+  __init__:
+    acq_mode: null
+    file_ext: mov
+    folder_path: J:/.shortcut-targets-by-id/0Bz-k3GVdqSBHSUZDVFhiMzFBSXc/E/Columbia/GVN
+      Lab/BeatProfiler/tutorial notebooks/sample videos
+    frame_rate: 20.0
+    vid_type: brightfield
+  analyze_and_export:
+    export_list:
+    - summary
+    - peak_summary
+    - traces
+    - plot_trace
+    - plot_mask
+    - labeled_video
+    - beat_segments
+    export_path: J:\.shortcut-targets-by-id\0Bz-k3GVdqSBHSUZDVFhiMzFBSXc\E\Columbia\GVN
+      Lab\BeatProfiler\tutorial notebooks\sample videos\exportbftissue
+    skip_first_n: 0
+    split_units: seconds
+    splits:
+    - - 0
+      - 20
+    - - 20
+      - null
+Trace:
+  __init__:
+    max_bpm: 360
+  analyze_peaks:
+    min_prominence: 0.2
+  calculate_drift:
+    method: null
+Video:
+  __init__:
+    low_ram: false
+    max_bpm: 360
+  calculate_mask:
+    invert: false
+    method: dynamic range
+    yolo_seg_model: No file selected
+  calculate_reference_frame:
+    rel_height: 0.05
+  calculate_trace:
+    reference: auto
