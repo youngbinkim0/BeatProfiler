@@ -4,6 +4,9 @@ import scipy as sp
 from scipy import signal
 import pandas as pd
 import numpy as np
+# scikit-video uses deprecated np variables
+np.float = np.float64
+np.int = np.int_
 import glob
 import os
 import warnings
@@ -2182,7 +2185,7 @@ class BatchTraceAnalyzer():
                     processed_seg = segments.copy()
                     # pad df if it's shorter than 2 seconds
                     if processed_seg.shape[1] < segment_len:
-                        processed_seg = pd.concat([processed_seg, pd.DataFrame(columns=range(processed_seg.shape[1], segments_len))],axis=1)
+                        processed_seg = pd.concat([processed_seg, pd.DataFrame(columns=range(processed_seg.shape[1], segment_len))],axis=1)
                     def peak_truncater2(index_num):
                         data = processed_seg.iloc[index_num, 0:].to_numpy()
                         argmax_derivative = np.nanargmax(np.diff(data)) #nanargmax instead of argmax to ignore the nans 
