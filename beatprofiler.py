@@ -401,8 +401,16 @@ class BFVideo(Video):
         
         # if no peaks use mean as reference
         if len(peaks) == 0:
-            self.reference_frame = np.mean(masked_video, axis=0)
-            return self.reference_frame
+            if self.low_ram:
+                video_reader = self.video_reader()
+                self.reference_frame = np.zeros_like(self.first_frame, dtype=float)
+                for _ in range(len(self)):
+                    frame = next(video_reader) * self.mask
+                    self.reference_frame += frame / n_frames
+                return self.reference_frame
+            else:
+                self.reference_frame = np.mean(self.raw_video, axis=0) * self.mask
+                return self.reference_frame
         
         # otherwise, use the peaks as temp_reference 2
         if self.low_ram:
@@ -1372,11 +1380,11 @@ class Trace:
 
         os.makedirs(savefig_path, exist_ok=True)
         # First export the raw trace
-        plt.plot(np.arange(len(self.raw_data))/self.frame_rate, self.raw_data, label="raw data")
+        plt.plot(np.arange(len(self.raw_data))/self.frame_rate, self.raw_data, label="Raw data")
         if self.amplitude_unit:
-            plt.plot(np.arange(len(self.baseline))/self.frame_rate, self.baseline, label="F0 baseline")
-        plt.scatter(self.peaks/self.frame_rate,self.raw_data[self.peaks], label = "peaks")
-        plt.scatter(self.valleys/self.frame_rate,self.raw_data[self.valleys], label = "valleys")
+            plt.plot(np.arange(len(self.baseline))/self.frame_rate, self.baseline, label="F₀ baseline")
+        plt.scatter(self.peaks/self.frame_rate,self.raw_data[self.peaks], label = "Peaks")
+        plt.scatter(self.valleys/self.frame_rate,self.raw_data[self.valleys], label = "Valleys")
         # plt.scatter(self.contraction_speeds_index/self.frame_rate, self.raw_data[self.contraction_speeds_index], label = "Contraction speed")
         # plt.scatter(self.relaxation_speeds_index/self.frame_rate, self.raw_data[self.relaxation_speeds_index], label = "Relaxation speed")
         plt.legend()
@@ -1387,7 +1395,7 @@ class Trace:
         plt.clf()
 
         # export the velocity
-        plt.plot(np.arange(len(self.velocity))/self.frame_rate, self.velocity, label="velocity")
+        plt.plot(np.arange(len(self.velocity))/self.frame_rate, self.velocity, label="Velocity")
         plt.scatter(self.contraction_speeds_index/self.frame_rate, self.velocity[self.contraction_speeds_index], label = "Contraction speed")
         plt.scatter(self.relaxation_speeds_index/self.frame_rate, self.velocity[self.relaxation_speeds_index], label = "Relaxation speed")
         plt.legend()
@@ -1403,8 +1411,8 @@ class Trace:
         if self.amplitude_unit:
             # Then export the df_f0
             plt.plot(np.arange(len(self.df_f0))/self.frame_rate, self.df_f0)
-            plt.scatter(self.peaks/self.frame_rate,self.df_f0[self.peaks], label = "peaks")
-            plt.scatter(self.valleys/self.frame_rate,self.df_f0[self.valleys], label = "valleys")
+            plt.scatter(self.peaks/self.frame_rate,self.df_f0[self.peaks], label = "Peaks")
+            plt.scatter(self.valleys/self.frame_rate,self.df_f0[self.valleys], label = "Valleys")
             # plt.scatter(self.contraction_speeds_index/self.frame_rate, self.df_f0[self.contraction_speeds_index], label = "Contraction speed")
             # plt.scatter(self.relaxation_speeds_index/self.frame_rate, self.df_f0[self.relaxation_speeds_index], label = "Relaxation speed")
             plt.legend()
@@ -1577,7 +1585,7 @@ class TissueTrace(Trace):
         plt.clf()
         
         # Export the velocity
-        plt.plot(np.arange(len(self.velocity))/self.frame_rate, self.velocity, label="velocity")
+        plt.plot(np.arange(len(self.velocity))/self.frame_rate, self.velocity, label="Velocity")
         plt.scatter(self.contraction_speeds_index/self.frame_rate, self.velocity[self.contraction_speeds_index], label = "Contraction speed")
         plt.scatter(self.relaxation_speeds_index/self.frame_rate, self.velocity[self.relaxation_speeds_index], label = "Relaxation speed")
         plt.legend()
