@@ -92,7 +92,7 @@ class Video():
                             yield frame.asarray()
             self.video_reader = video_reader
                 
-            if not self.low_ram:
+            if not self.low_ram and not isinstance(self, TissueVideo):
                 self.raw_video = tifffile.imread(self.img_paths[0])
                 for i in range(1, len(self.img_paths)):
                     self.raw_video = np.concatenate([self.raw_video, tifffile.imread(self.img_paths[i])])
@@ -122,7 +122,7 @@ class Video():
                     yield nd2vid[n]
                     n +=1
             self.video_reader = video_reader
-            if not self.low_ram:
+            if not self.low_ram and not isinstance(self, TissueVideo):
                 self.raw_video = np.array(nd2vid)
 
         elif self.file_ext == '.tif':
@@ -138,7 +138,7 @@ class Video():
                     for frame in tif.pages:
                         yield frame.asarray()
             self.video_reader = video_reader
-            if not self.low_ram:
+            if not self.low_ram and not isinstance(self, TissueVideo):
                 self.raw_video = tifffile.imread(self.file_path)
                 
         else: # mp4, avi, etc. use skvideo to import
@@ -162,7 +162,7 @@ class Video():
                 for frame in generator:
                     yield frame.mean(axis=-1)
             self.video_reader = video_reader
-            if not self.low_ram:
+            if not self.low_ram and not isinstance(self, TissueVideo):
                 self.raw_video = skvideo.io.vread(self.file_path).mean(axis=-1)
 
         self.mask = np.full(self.first_frame.shape, True)
