@@ -14,6 +14,8 @@ import bisect
 from sklearn.preprocessing import minmax_scale
 from sklearn.mixture import GaussianMixture
 import yaml
+import matplotlib
+matplotlib.use('Agg')  # Use a non-GUI backend to prevent GUI-related issues like segmentation faults
 import matplotlib.pyplot as plt
 import cv2
 from matplotlib.patches import Rectangle
@@ -1967,6 +1969,7 @@ class BatchTraceAnalyzer():
             plot_trace_path = os.path.join(export_path, "plot_trace")
         else:
             plot_trace = False
+            plot_trace_path = None
 
         # if no splits, set 1 split with the range as the full trace
         if not splits:
