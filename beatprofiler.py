@@ -1,5 +1,8 @@
 # Last updated in 02/14/2024 by Youngbin Kim
 import sys
+import matplotlib
+matplotlib.use('Agg')  # Use a non-GUI backend to prevent GUI-related issues like segmentation faults
+import matplotlib.pyplot as plt
 import scipy as sp
 from scipy import signal
 import pandas as pd
@@ -14,9 +17,7 @@ import bisect
 from sklearn.preprocessing import minmax_scale
 from sklearn.mixture import GaussianMixture
 import yaml
-import matplotlib
-matplotlib.use('Agg')  # Use a non-GUI backend to prevent GUI-related issues like segmentation faults
-import matplotlib.pyplot as plt
+
 import cv2
 from matplotlib.patches import Rectangle
 
@@ -968,34 +969,78 @@ class TissueVideo(Video):
             self.save_labeled_tissue(savefig_path)
         
         return self.width
-    
-    def save_labeled_tissue(self, savefig_path):
-        assert savefig_path is not None, "savefig_path cannot be None if savefig is True"
-        plt.imshow(self.first_frame, cmap="gray")
-        plt.imshow(self.mask, alpha=0.5, cmap="copper")
-        if self.width_coord is not None:
-            plt.plot(self.width_coord[:,0], self.width_coord[:,1], color="cyan", label="tissue width")
-        
-        if self.bbox is not None:
-            #add rectangle
-            plt.gca().add_patch(Rectangle(self.bbox[0, :2],width=(self.bbox[0, 2]-self.bbox[0, 0]),height=(self.bbox[0, 3]-self.bbox[0, 1]),
-                                edgecolor='#BB5566',
-                                facecolor='none',
-                                lw=1))
 
-            plt.gca().add_patch(Rectangle(self.bbox[1, :2],width=(self.bbox[1, 2]-self.bbox[1, 0]),height=(self.bbox[1, 3]-self.bbox[1, 1]),
-                                edgecolor='#004488',
-                                facecolor='none',
-                                lw=1))
-        #add scatter
-        plt.scatter(x=self.points1[:,0], y=self.points1[:,1], color="#BB5566", label="tracked points 1")
-        plt.scatter(x=self.points2[:,0], y=self.points2[:,1], color="#004488", label="tracked points 2")
-        plt.legend()
-        
+#    def save_labeled_tissue(self, savefig_path):
+#        assert savefig_path is not None, "savefig_path cannot be None if savefig is True"
+#        plt.imshow(self.first_frame, cmap="gray")
+#        plt.imshow(self.mask, alpha=0.5, cmap="copper")
+#        if self.width_coord is not None:
+#            plt.plot(self.width_coord[:,0], self.width_coord[:,1], color="cyan", label="tissue width")
+#
+#        if self.bbox is not None:
+#            #add rectangle
+#            plt.gca().add_patch(Rectangle(self.bbox[0, :2],width=(self.bbox[0, 2]-self.bbox[0, 0]),height=(self.bbox[0, 3]-self.bbox[0, 1]),
+#                                edgecolor='#BB5566',
+#                                facecolor='none',
+#                                lw=1))
+#
+#            plt.gca().add_patch(Rectangle(self.bbox[1, :2],width=(self.bbox[1, 2]-self.bbox[1, 0]),height=(self.bbox[1, 3]-self.bbox[1, 1]),
+#                                edgecolor='#004488',
+#                                facecolor='none',
+#                                lw=1))
+#        #add scatter
+#        plt.scatter(x=self.points1[:,0], y=self.points1[:,1], color="#BB5566", label="tracked points 1")
+#        plt.scatter(x=self.points2[:,0], y=self.points2[:,1], color="#004488", label="tracked points 2")
+#        plt.legend()
+#
+#        os.makedirs(savefig_path, exist_ok=True)
+#        plt.savefig(fname=os.path.join(savefig_path, self.name.replace("\\", "-")+" points.png"))
+#        plt.clf()
+
+    def save_labeled_tissue(self, savefig_path):
+        assert savefig_path is not None, "savefig_path cannot be None"
+        # Convert the first_frame to BGR color space as OpenCV uses BGR
+        normalized_first_frame = cv2.normalize(self.first_frame, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+        # Then, convert the normalized image to 8-bit
+        first_frame_8bit = np.uint8(normalized_first_frame * 255)
+        first_frame_color = cv2.cvtColor(first_frame_8bit, cv2.COLOR_GRAY2BGR)
+        # Create a color mask in BGR
+        mask_color = cv2.applyColorMap((self.mask * 123).astype(np.uint8), cv2.COLORMAP_MAGMA)
+        # Overlay the mask on the first frame
+        overlay = cv2.addWeighted(first_frame_color, 1, mask_color, 0.5, 0)
+
+        if self.width_coord is not None:
+            for point in self.width_coord:
+                cv2.line(overlay, tuple(self.width_coord[0].astype(int)), tuple(self.width_coord[1].astype(int)), color=(255, 255, 0), thickness=2)  # Cyan in BGR
+
+        if self.bbox is not None:
+            # Convert your edge colors from hex to BGR format for OpenCV
+            color_1 = (102, 85, 187)  # BGR for '#BB5566'
+            color_2 = (136, 68, 0)    # BGR for '#004488'
+            thickness = 2  # Line thickness. Use -1 for filled
+
+            # Draw the first rectangle
+            bbox_1 = self.bbox[0]
+            top_left_1 = (int(bbox_1[0]), int(bbox_1[1]))
+            bottom_right_1 = (int(bbox_1[2]), int(bbox_1[3]))
+            cv2.rectangle(overlay, top_left_1, bottom_right_1, color_1, thickness)
+            
+            # Draw the second rectangle
+            bbox_2 = self.bbox[1]
+            top_left_2 = (int(bbox_2[0]), int(bbox_2[1]))
+            bottom_right_2 = (int(bbox_2[2]), int(bbox_2[3]))
+            cv2.rectangle(overlay, top_left_2, bottom_right_2, color_2, thickness)
+
+        # Draw scatter points
+        for point in self.points1:
+            cv2.circle(overlay, tuple(point.astype(int)), radius=1, color=(102, 85, 187), thickness=2)  # Color #BB5566 in BGR
+        for point in self.points2:
+            cv2.circle(overlay, tuple(point.astype(int)), radius=1, color=(136, 68, 0), thickness=2)  # Color #004488 in BGR
+
         os.makedirs(savefig_path, exist_ok=True)
-        plt.savefig(fname=os.path.join(savefig_path, self.name.replace("\\", "-")+" points.png"))
-        plt.clf()
-        
+        save_path = os.path.join(savefig_path, self.name.replace("\\", "-") + " points.png")
+        cv2.imwrite(save_path, overlay)
+
     def save_labeled_video(self, savevid_path):
         assert savevid_path is not None, "savevid_path cannot be None if savefig is True"
 
