@@ -47,7 +47,7 @@
 
 
 
-If you downloaded and installed the mac version and see "BeatProfiler is damaged and can’t be opened" message in the image below when you try to open the app, it means that macOS can't verify the app's developer. We are currently trying to get BeatProfiler notarized by Apple for a smoother public distribution experience, so that it is treated as a trusted software by Apple.
+If you downloaded and installed the mac version and see "BeatProfiler is damaged and can’t be opened" message in the image below when you try to open the app, it means that macOS can't verify the app's developer. For a smoother public distribution experience, we are currently trying to get BeatProfiler notarized by Apple, so that it is treated as a trusted software on macOS.
 
 Here's a quick fix thru a command on terminal here:
 1. Open up your terminal
