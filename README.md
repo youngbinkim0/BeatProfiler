@@ -81,6 +81,26 @@ Note: `/Applications/BeatProfiler.app` is the path in which BeatProfiler is inst
 3. Once you execute the above command, click open BeatProfiler again, and now it should open
 
 
+# macOS verified compatibility: 
+
+### macOS versions: 
+
+1. macOS Catalina (10.x.x)
+2. macOS BigSur (11.x.x) 
+3. macOS Monterey (12.x.x)
+4. macOS Ventura (13.x.x) 
+
+### CPU chip model: 
+
+1. Intel Core i5
+2. M2 Max
+
+### Memory: 
+
+1. 8GB
+2. 32 GB
+
+
 
 
 
