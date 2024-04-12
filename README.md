@@ -1,3 +1,4 @@
+
 <div align="center">
 
   <img src="Assets/beatprofiler-logo.png" alt="logo" width=80% height="auto" />
@@ -22,10 +23,31 @@
   <a href="https://github.com/youngbinkim0/BeatProfiler/stargazers">
     <img src="https://img.shields.io/github/stars/youngbinkim0/BeatProfiler" alt="stars" />
   </a>
+  
   <a href="https://github.com/youngbinkim0/BeatProfiler/issues/">
     <img src="https://img.shields.io/github/issues/youngbinkim0/BeatProfiler" alt="open issues" />
   </a>
+  
 </p>
+
+
+<p>
+  Download Stats for BeatProfiler Software
+</p>
+
+![Mac Downloads](https://img.shields.io/badge/mac--downloads-7-green)
+![Windows Downloads](https://img.shields.io/badge/windows--downloads-9-blue)
+
+
+<p>
+  Download Stats for BeatProfiler pip package
+</p>
+
+![PyPI Downloads](https://img.shields.io/pypi/dw/beatprofiler?label=downloads)
+
+
+
+
    
 <h4>
     <a href="https://beatprofiler.github.io/">Website</a>
