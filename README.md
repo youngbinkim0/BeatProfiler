@@ -69,16 +69,16 @@
 
 
 
-If you downloaded and installed the mac version and see "BeatProfiler is damaged and can’t be opened" message in the image below when you try to open the app, it DOES NOT mean the software is damaged or corrupted, it means that macOS can't verify the app's developer. For a smoother public distribution experience, we are currently trying to get BeatProfiler notarized by Apple, so that it is treated as a trusted software on macOS.
+If you downloaded and installed the macOS version and see "BeatProfiler is damaged and can’t be opened" message in the image below when you try to open the app, it DOES NOT mean the software is damaged or corrupted. It means that macOS can't verify the app's developer. For a smoother public distribution experience, we are currently trying to get BeatProfiler notarized by Apple so that it is treated as a trusted software on macOS.
 
-Here's a quick fix thru a command on terminal:
+Here's a quick fix through a command on Terminal:
 1. Open up your terminal
-2. enter command: `xattr -cr /Applications/BeatProfiler.app`
+2. Enter the command: `xattr -cr /Applications/BeatProfiler.app`
 
    
-Note: `/Applications/BeatProfiler.app` is the path to the location in which BeatProfiler is installed to, by default it will be copied to the Application folder
+Note: `/Applications/BeatProfiler.app` is the path to the location in which BeatProfiler is installed. By default, it will be copied to the Application folder
 
-3. Once your execute the above command, click open BeatProfiler again, and now it should open
+3. Once you execute the above command, click open BeatProfiler again, and now it should open
 
 
 
