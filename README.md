@@ -76,7 +76,7 @@ Here's a quick fix through a command on Terminal:
 2. Enter the command: `xattr -cr /Applications/BeatProfiler.app`
 
    
-Note: `/Applications/BeatProfiler.app` is the path to the location in which BeatProfiler is installed. By default, it will be copied to the Application folder
+Note: `/Applications/BeatProfiler.app` is the path in which BeatProfiler is installed. By default, it will be copied to the Application folder
 
 3. Once you execute the above command, click open BeatProfiler again, and now it should open
 
