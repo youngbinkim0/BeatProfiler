@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="Assets/beatprofiler-logo.png" alt="logo" width="500" height="auto" />
+  <img src="Assets/beatprofiler-logo.png" alt="logo" width=80% height="auto" />
   <h1> BeatProfiler: Rapid In Vitro Cardiac Functional Analysis </h1>
   
   <p>
