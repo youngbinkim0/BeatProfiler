@@ -85,10 +85,10 @@ Note: `/Applications/BeatProfiler.app` is the path in which BeatProfiler is inst
 
 ### macOS versions: 
 
-1. macOS Catalina (10.x.x)
-2. macOS BigSur (11.x.x) 
-3. macOS Monterey (12.x.x)
-4. macOS Ventura (13.x.x) 
+1. macOS Catalina
+2. macOS BigSur
+3. macOS Monterey
+4. macOS Ventura
 
 ### CPU chip model: 
 
