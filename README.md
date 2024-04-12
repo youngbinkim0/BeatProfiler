@@ -101,6 +101,9 @@ Note: `/Applications/BeatProfiler.app` is the path in which BeatProfiler is inst
 2. 32 GB
 
 
+If the above doesn't cover your macOS config, it DOESN'T mean it's not compatible, it's just we haven't tested BP on those configs yet. We'll be closely monitoring users' issues within the first few months of BeatProfiler's release, if you found any compatibility issues, please reach out to us, and we will reply within 24 hours. 
+
+
 
 
 
