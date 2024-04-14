@@ -35,15 +35,15 @@
   Download Stats for BeatProfiler Software
 </p>
 
-![Mac Downloads](https://img.shields.io/badge/mac--downloads-7-green)
-![Windows Downloads](https://img.shields.io/badge/windows--downloads-9-blue)
+![Mac Downloads](https://img.shields.io/badge/mac--downloads-11-green)
+![Windows Downloads](https://img.shields.io/badge/windows--downloads-13-blue)
 
 
 <p>
   Download Stats for BeatProfiler pip package
 </p>
 
-![PyPI Downloads](https://img.shields.io/pypi/dw/beatprofiler?label=downloads)
+![PyPI Downloads](https://img.shields.io/pypi/dm/beatprofiler?label=downloads)
 
 
 
