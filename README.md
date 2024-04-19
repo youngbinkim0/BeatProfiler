@@ -35,8 +35,8 @@
   Download Stats for BeatProfiler Software
 </p>
 
-![Mac Downloads](https://img.shields.io/badge/mac--downloads-11-green)
-![Windows Downloads](https://img.shields.io/badge/windows--downloads-13-blue)
+![Mac Downloads](https://img.shields.io/badge/mac--downloads-17-green)
+![Windows Downloads](https://img.shields.io/badge/windows--downloads-28-blue)
 
 
 <p>
