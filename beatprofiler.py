@@ -685,8 +685,8 @@ class TissueVideo(Video):
         if len(results[0].boxes.xyxy) < 2:
             raise Exception("Less the 2 pillars are detected.")
 
-        # opencv self.bbox format is different from yolo
-        # self.bbox is in (x1,y1,w,h) format where x1, y1 is the coord for the TOP LEFT (NOT center) and w,h are width and height
+        # opencv xywh format is different from yolo. opencv xy is top left, but yolo xy is center
+        # self.bbox is in (x1,y1,x2,y2) format where x1, y1 is the coord for the TOP LEFT (NOT center) and x2, y2 is the coord for the bottom right
         if results[0].boxes.xywh[0,0] > results[0].boxes.xywh[1,0]:
             self.center[0, 0] = results[0].boxes.xywh[1, :2].cpu()
             self.center[0, 1] = results[0].boxes.xywh[0, :2].cpu()
@@ -763,8 +763,8 @@ class TissueVideo(Video):
         bounding_box : str or np.array
             Method for selecting anchor points to track.
             'pt_file_path' uses YOLOv8 model to detect anchor bounding box
-            'csv_file_path'
-            np.array with shape 2x4 uses pixel coordinates to define bounding boxes. Format is (x1,y1,x2,y2) for each box
+            'csv_file_path' first column should be the same name as self.name. Format is (x1,y1,w1,h1,x2,y2,w2,h2)
+            np.array with shape 2x4 uses pixel coordinates to define bounding boxes. Format is (x1,y1,w,h) for each box
         anchor_method : str
             Method for selecting anchor points to track.
             'auto' uses ShiTomasi method in opencv to identify n best points to track for each bounding box
@@ -781,14 +781,20 @@ class TissueVideo(Video):
         '''
         # define bounding box to track distance between
         if type(bounding_box) == np.array:
+            # bounding box is in xywh format. xy indicates top left.
             assert(bounding_box.shape == (2,4)), "Shape of bounding box array must be (2,4)."
             self.bbox = bounding_box
+            self.center[0] = self.bbox[:,:2] + self.bbox[:,2:] / 2
+            self.bbox[:,2:] += self.bbox[:,:2]
         elif bounding_box[-3:] == ".pt":
             from ultralytics import YOLO
             model = YOLO(bounding_box)
             self.autodetect_pillars(model, frame_i=0)
         elif bounding_box[-4:] == ".csv":
+            # bounding box csv is in xywh format. xy indicates top left.
             self.bbox = pd.read_csv(bounding_box, index_col=0).loc[self.name].to_numpy().reshape(2,4)
+            self.center[0] = self.bbox[:,:2] + self.bbox[:,2:] / 2
+            self.bbox[:,2:] += self.bbox[:,:2]
         else:
             raise Exception("bounding_box must be a YOLOv8 .pt model, a bounding box .csv file, or (2,4) numpy array.")
             
@@ -1033,9 +1039,9 @@ class TissueVideo(Video):
 
         # Draw scatter points
         for point in self.points1:
-            cv2.circle(overlay, tuple(point.astype(int)), radius=1, color=(102, 85, 187), thickness=2)  # Color #BB5566 in BGR
+            cv2.circle(overlay, tuple(point.astype(int)), radius=1, color=(187, 85, 102), thickness=2)  # Color red
         for point in self.points2:
-            cv2.circle(overlay, tuple(point.astype(int)), radius=1, color=(136, 68, 0), thickness=2)  # Color #004488 in BGR
+            cv2.circle(overlay, tuple(point.astype(int)), radius=1, color=(0, 68, 136), thickness=2)  # Color blue
 
         os.makedirs(savefig_path, exist_ok=True)
         save_path = os.path.join(savefig_path, self.name.replace("\\", "-") + " points.png")
@@ -1058,14 +1064,15 @@ class TissueVideo(Video):
                                         inputdict={'-r': str(self.frame_rate),}, outputdict={'-r': str(self.frame_rate),})
         
         video_reader = self.video_reader()
+        scaling_factor = np.max(self.first_frame)
         for frame_i in range(len(self)):
             frame = next(video_reader)
-            scaled_frame = minmax_scale(frame, feature_range=(0,255)).astype(np.uint8)
+            scaled_frame = (frame / scaling_factor * 255).astype(np.uint8)
             scaled_frame = np.stack((scaled_frame,)*3,axis=-1)
             for point in self.tracked_points[frame_i]:
-                cv2.circle(scaled_frame, tuple(point.astype(int)), 5, (255,0,0),-1)
+                cv2.circle(scaled_frame, tuple(point.astype(int)), radius=3, color=(187, 85, 102), thickness=-1)
             for center in self.center[frame_i]:
-                cv2.circle(scaled_frame, tuple(center.astype(int)), 10, (0,255,0),-1)
+                cv2.circle(scaled_frame, tuple(center.astype(int)), radius=5, color=(0, 68, 136), thickness=-1)
             result.writeFrame(scaled_frame)
         result.close()
             
@@ -1486,10 +1493,7 @@ class TissueTrace(Trace):
     def calculate_drift(self, method=None, min_prominence=None):
         pass
     def analyze_peaks(self, min_prominence=0.25, savefig=False, savefig_path=None):        
-        # width in microns
-        self.width = self.width_px * self.um_per_pix
-        # cross sectional area in mm^2
-        self.xc_area = np.pi * (self.width/1000/2)**2
+        
         # pillar distance trace in microns
         self.distance = self.raw_data * self.um_per_pix
         # pillar deflection trace in microns
@@ -1503,8 +1507,15 @@ class TissueTrace(Trace):
         else:
             self.resting_dist = self.distance.max() * self.um_per_pix
             self.resting_tension = self.force.min()
-        # stress trace in mN/mm^2
-        self.stress = self.force/1000/self.xc_area 
+
+        # only calculate if width is given
+        if not self.width_px is None:
+            # width in microns
+            self.width = self.width_px * self.um_per_pix
+            # cross sectional area in mm^2
+            self.xc_area = np.pi * (self.width/1000/2)**2
+            # stress trace in mN/mm^2
+            self.stress = self.force/1000/self.xc_area 
         
         # need to take care of some variables to make compatible with traditional trace analysis            
         self.amplitude_unit = "um" # boolean variable indicating whether df_f0 exists
@@ -1534,32 +1545,36 @@ class TissueTrace(Trace):
         self.peak_summary["passive tension [uN]"] = (self.unloaded_dist - self.peak_summary["passive length [um]"]) * self.force_disp_coeff
         self.peak_summary["active force [uN]"] = self.peak_summary["total force [uN]"] - self.resting_tension
 
-        # calculate stress metrics
-        self.peak_summary["total stress [mN/mm2]"] = self.peak_summary["total force [uN]"] / self.xc_area / 1000
-        self.peak_summary["passive stress [mN/mm2]"] = self.peak_summary["passive tension [uN]"] / self.xc_area / 1000
-        self.peak_summary["active stress [mN/mm2]"] = self.peak_summary["active force [uN]"] / self.xc_area / 1000
-        
+        if not self.width_px is None:
+            # calculate stress metrics
+            self.peak_summary["total stress [mN/mm2]"] = self.peak_summary["total force [uN]"] / self.xc_area / 1000
+            self.peak_summary["passive stress [mN/mm2]"] = self.peak_summary["passive tension [uN]"] / self.xc_area / 1000
+            self.peak_summary["active stress [mN/mm2]"] = self.peak_summary["active force [uN]"] / self.xc_area / 1000
+            
         # calculate work (W = 1/2(x_1^2-x_0^2)*force_disp_coeff)
         peak_deflections = self.unloaded_dist - self.peak_summary["active length [um]"]
         resting_deflections = self.unloaded_dist - self.peak_summary["passive length [um]"]
         self.peak_summary["work per contraction cycle [nJ]"] = 0.5 * self.force_disp_coeff * (peak_deflections ** 2 - resting_deflections ** 2) / 1000
 
         # add tissue measurements
-        self.feature_summary["width [um]"] = self.width
-        self.feature_summary["cross sectional area [mm2]"] = self.xc_area
-        self.feature_summary["tissue area [mm2]"] = self.area * self.um_per_pix**2 # convert pix^2 to mm^2
+        if not self.width_px is None:
+            self.feature_summary["width [um]"] = self.width
+            self.feature_summary["cross sectional area [mm2]"] = self.xc_area
+            self.feature_summary["resting stress [mN/mm2]"] = self.resting_tension/1000/self.xc_area
+        if not self.area is None:
+            self.feature_summary["tissue area [mm2]"] = self.area * self.um_per_pix**2 # convert pix^2 to mm^2
         self.feature_summary["resting tension [uN]"] = self.resting_tension
-        self.feature_summary["resting stress [mN/mm2]"] = self.resting_tension/1000/self.xc_area
 
         # calculate mean and std summary
         for col in ["active length [um]", "passive length [um]", 
                     "total force [uN]", "passive tension [uN]", "active force [uN]", 
                     "total stress [mN/mm2]", "passive stress [mN/mm2]", "active stress [mN/mm2]", 
                     "work per contraction cycle [nJ]"]:
-            self.feature_summary['mean ' + col] = self.peak_summary[col].mean()
-            self.feature_summary['std ' + col] = self.peak_summary[col].std()
-            self.feature_summary['min ' + col] = self.peak_summary[col].min()
-            self.feature_summary['max ' + col] = self.peak_summary[col].max()
+            if col in self.peak_summary.columns:
+                self.feature_summary['mean ' + col] = self.peak_summary[col].mean()
+                self.feature_summary['std ' + col] = self.peak_summary[col].std()
+                self.feature_summary['min ' + col] = self.peak_summary[col].min()
+                self.feature_summary['max ' + col] = self.peak_summary[col].max()
         
         # reorganize the columns 
         feature_columns = self.feature_summary.index.sort_values()
@@ -1620,19 +1635,20 @@ class TissueTrace(Trace):
         plt.savefig(os.path.join(savefig_path, self.name.replace("\\", "-")+" force.png"))
         plt.clf()
         
-        # Export the stress
-        plt.plot(np.arange(len(self.stress))/self.frame_rate, self.stress, label="Stress")
-        plt.scatter(self.peaks/self.frame_rate,self.stress[self.peaks], label = "Max stress")
-        plt.scatter(self.valleys/self.frame_rate,self.stress[self.valleys], label = "Passive stress")
-        # plt.scatter(self.contraction_speeds_index/self.frame_rate, self.stress[self.contraction_speeds_index], label = "Contraction speed")
-        # plt.scatter(self.relaxation_speeds_index/self.frame_rate, self.stress[self.relaxation_speeds_index], label = "Relaxation speed")
-        plt.axhline(y=self.resting_tension/1000/self.xc_area, label="Resting stress")
-        plt.legend()
-        plt.title(self.name+" stress")
-        plt.xlabel("Time [s]")
-        plt.ylabel("Stress [mN/mm²]")
-        plt.savefig(os.path.join(savefig_path, self.name.replace("\\", "-")+" stress.png"))
-        plt.clf()
+        if not self.width_px is None:
+            # Export the stress
+            plt.plot(np.arange(len(self.stress))/self.frame_rate, self.stress, label="Stress")
+            plt.scatter(self.peaks/self.frame_rate,self.stress[self.peaks], label = "Max stress")
+            plt.scatter(self.valleys/self.frame_rate,self.stress[self.valleys], label = "Passive stress")
+            # plt.scatter(self.contraction_speeds_index/self.frame_rate, self.stress[self.contraction_speeds_index], label = "Contraction speed")
+            # plt.scatter(self.relaxation_speeds_index/self.frame_rate, self.stress[self.relaxation_speeds_index], label = "Relaxation speed")
+            plt.axhline(y=self.resting_tension/1000/self.xc_area, label="Resting stress")
+            plt.legend()
+            plt.title(self.name+" stress")
+            plt.xlabel("Time [s]")
+            plt.ylabel("Stress [mN/mm²]")
+            plt.savefig(os.path.join(savefig_path, self.name.replace("\\", "-")+" stress.png"))
+            plt.clf()
         
         # Export the velocity
         plt.plot(np.arange(len(self.velocity))/self.frame_rate, self.velocity, label="Velocity")
@@ -1823,8 +1839,11 @@ class BatchVideoAnalyzer():
             #         video = TissueVideo(self.file_list[i], acq_mode=self.acq_mode, frame_rate=self.frame_rate, name=name, **get_config_param(self.video_config, '__init__'))
             #         # for tissue video analysis, calculate mask and trace needs to be run first before width
             #         video.calculate_trace(savevid=labeled_video, savevid_path=labeled_video_path, **get_config_param(self.video_config, 'calculate_trace'))
-            #         video.calculate_mask(savefig=plot_mask, savefig_path=plot_mask_path, **get_config_param(self.video_config, 'calculate_mask'))
-            #         video.calculate_width(savefig=plot_mask, savefig_path=plot_mask_path)
+
+            #         # only calculate mask and width if mask method is defined. otherwise we skip the whole width/stress analysis
+            #         if not "method" in get_config_param(self.video_config, 'calculate_mask') or not get_config_param(self.video_config, 'calculate_mask')["method"] is None:
+            #             video.calculate_mask(savefig=plot_mask, savefig_path=plot_mask_path, **get_config_param(self.video_config, 'calculate_mask'))
+            #             video.calculate_width(savefig=plot_mask, savefig_path=plot_mask_path)
 
             #         # save tissue specific parameters
             #         if not "width_pxs" in self.tissue_params.keys():
@@ -1856,8 +1875,11 @@ class BatchVideoAnalyzer():
                 video = TissueVideo(self.file_list[i], acq_mode=self.acq_mode, frame_rate=self.frame_rate, name=name, **get_config_param(self.video_config, '__init__'))
                 # for tissue video analysis, calculate mask and trace needs to be run first before width
                 video.calculate_trace(savevid=labeled_video, savevid_path=labeled_video_path, **get_config_param(self.video_config, 'calculate_trace'))
-                video.calculate_mask(savefig=plot_mask, savefig_path=plot_mask_path, **get_config_param(self.video_config, 'calculate_mask'))
-                video.calculate_width(savefig=plot_mask, savefig_path=plot_mask_path)
+
+                # only calculate mask and width if mask method is defined. otherwise we skip the whole width/stress analysis
+                if not "method" in get_config_param(self.video_config, 'calculate_mask') or not get_config_param(self.video_config, 'calculate_mask')["method"] is None:
+                    video.calculate_mask(savefig=plot_mask, savefig_path=plot_mask_path, **get_config_param(self.video_config, 'calculate_mask'))
+                    video.calculate_width(savefig=plot_mask, savefig_path=plot_mask_path)
 
                 # save tissue specific parameters
                 if not "width_pxs" in self.tissue_params.keys():
@@ -2094,7 +2116,10 @@ class BatchTraceAnalyzer():
                 #     if self.trace_type == "tissue":
                 #         distance = pd.concat([distance, pd.Series(trace.distance, name=name).to_frame().T])
                 #         force = pd.concat([force, pd.Series(trace.force, name=name).to_frame().T])
-                #         stress = pd.concat([stress, pd.Series(trace.stress, name=name).to_frame().T])
+                #         try:
+                #             stress = pd.concat([stress, pd.Series(trace.stress, name=name).to_frame().T])
+                #         except:
+                #             pass
                 #     else:
                 #         raw_data = pd.concat([raw_data, pd.Series(trace.raw_data, name=name).to_frame().T])
 
@@ -2135,7 +2160,10 @@ class BatchTraceAnalyzer():
                 if self.trace_type == "tissue":
                     distance = pd.concat([distance, pd.Series(trace.distance, name=name).to_frame().T])
                     force = pd.concat([force, pd.Series(trace.force, name=name).to_frame().T])
-                    stress = pd.concat([stress, pd.Series(trace.stress, name=name).to_frame().T])
+                    try:
+                        stress = pd.concat([stress, pd.Series(trace.stress, name=name).to_frame().T])
+                    except:
+                        pass
                 else:
                     raw_data = pd.concat([raw_data, pd.Series(trace.raw_data, name=name).to_frame().T])
 
