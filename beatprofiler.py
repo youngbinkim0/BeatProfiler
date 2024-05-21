@@ -799,7 +799,7 @@ class TissueVideo(Video):
             self.autodetect_pillars(model, frame_i=0)
         elif bounding_box[-4:] == ".csv":
             # bounding box csv is in xywh format. xy indicates top left.
-            self.bbox = pd.read_csv(bounding_box, index_col=0).loc[self.name].to_numpy().reshape(2,4)
+            self.bbox = pd.read_csv(bounding_box, index_col=0, dtype={0: str}).loc[self.name].to_numpy().reshape(2,4)
             self.center[0] = self.bbox[:,:2] + self.bbox[:,2:] / 2
             self.bbox[:,2:] += self.bbox[:,:2]
         else:
