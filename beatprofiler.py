@@ -133,16 +133,23 @@ class Video():
             with tifffile.TiffFile(self.file_path) as tif:
                 self.n_frames = len(tif.pages)
             self.first_frame = tifffile.imread(self.file_path, key=0)
+            if self.first_frame.ndim > 2:
+                self.first_frame = self.first_frame.mean(axis=-1)
             self.frame_rate = frame_rate
             
             # frame by frame reader used for low ram or tissue videos
             def video_reader():
                 with tifffile.TiffFile(self.file_path) as tif:
                     for frame in tif.pages:
-                        yield frame.asarray()
+                        frame_mono =  frame.asarray()
+                        if frame_mono.ndim > 2:
+                            frame_mono = frame_mono.mean(axis=-1)
+                        yield frame_mono
             self.video_reader = video_reader
             if not self.low_ram and not isinstance(self, TissueVideo):
                 self.raw_video = tifffile.imread(self.file_path)
+                if self.raw_video.ndim > 3:
+                    self.raw_video = self.raw_video.mean(axis=-1)
                 
         else: # mp4, avi, etc. use skvideo to import
             ## need to set FFMPEG path for GUI version
@@ -888,7 +895,7 @@ class TissueVideo(Video):
 
         if savevid:
             self.save_labeled_video(savevid_path)
-            
+
         return self.trace
     
 
