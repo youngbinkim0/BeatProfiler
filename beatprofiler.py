@@ -1948,7 +1948,11 @@ class BatchTraceAnalyzer():
         self.progressbar = progressbar
         self.progressbar_from_video = progressbar_from_video
         self.progresstext = progresstext
-
+        self.trace_type = None
+        self.tissue_params = None
+        self.frame_rate = None
+        self.raw_traces = None
+        
         # only relevant for the GUI application's progress bar
         # if progressbar exists, check if is an instance of QProgressBar
         # if not, set it as None as it is not updatable
