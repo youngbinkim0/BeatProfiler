@@ -35,9 +35,8 @@
   Download Stats for BeatProfiler Software
 </p>
 
-![Mac Downloads](https://img.shields.io/badge/mac--downloads-43-green)
-![Windows Downloads](https://img.shields.io/badge/windows--downloads-105-blue)
-
+![Mac Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fyoungbinkim0%2FBeatProfiler%2Freleases&query=%24%5B*%5D.assets%5B%3F(%40.name%20%3D%3D%20'BeatProfiler-v1.0-macOS-Universal.dmg')%5D.download_count&label=mac-downloads&color=green)
+![Windows Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fyoungbinkim0%2FBeatProfiler%2Freleases&query=%24%5B*%5D.assets%5B%3F(%40.name%20%3D%3D%20'BeatProfiler-v1.0-Windows-Universal.exe')%5D.download_count&label=windows-downloads)
 
 <p>
   Download Stats for BeatProfiler pip package
