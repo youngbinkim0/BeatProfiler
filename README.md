@@ -46,10 +46,11 @@
 
 
 
-
    
 <h4>
     <a href="https://beatprofiler.github.io/">Website</a>
+  <span> · </span>
+    <a href="https://ieeexplore.ieee.org/document/10490213">Publication</a>
   <span> · </span>
     <a href="https://kunlunw-beatprofiler-tutorial.readthedocs.io/en/latest/index.html">Documentation</a>
   <span> · </span>
